@@ -2,6 +2,8 @@ const userModel = require("../Models/UserModel");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const otpGenerator = require("otp-generator");
+const nodemailer = require("nodemailer");
+
 
 //User registration
 const userRegistration = async (req, res) => {
@@ -124,35 +126,6 @@ const UserLogOut = async (req, res) => {
   }
 };
 
-//Get user details
-const GetUser = async (req, res) => {
-  try {
-    const { id } = req.id;
-
-    // Find the existed user
-    const existingUser = await findById(id);
-
-    if (!existingUser) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
-    }
-
-    // If user is found, return success response with user data
-    res.status(200).json({
-      success: true,
-      message: "User found successfully",
-      data: existingUser,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
 //Reset password
 const ResetPassword = async (req, res) => {
   try {
@@ -174,19 +147,18 @@ const ResetPassword = async (req, res) => {
       digits: true,
     });
 
-    var transport = nodemailer.createTransport({
+    const transport = nodemailer.createTransport({
       host: "sandbox.smtp.mailtrap.io",
       port: 2525,
       auth: {
-        user: process.env.SENDER,
-        pass: process.env.PASSWORD,
+        user: "f5757980f565d4",
+        pass: "c734798d54eb51",
       },
     });
-
     const info = await transporter.sendMail({
       from: process.env.SENDER, // sender address
       to: email, // list of receivers
-      subject: "Reset password", // Subject line
+      subject: "New OTP has been generated", // Subject line
       //text: "Hello world?", // plain text body
       html: `<h3>Your Generated OTP : ${otp}</h3>`, // html body
     });
@@ -222,4 +194,81 @@ const ResetPassword = async (req, res) => {
   }
 };
 
-module.exports = { userRegistration, UserLogin, UserLogOut, GetUser };
+// Verify OTP
+const VerifyOtp = async (req, res) => {
+  try {
+    const { otp, newPassword } = req.body;
+
+    const hashPassword = await bcrypt.hash(newPassword, 10);
+
+    const existedUser = await userModel.findOneAndUpdate(
+      { otp },
+      {
+        $set: {
+          password: hashPassword,
+          otp: 0,
+        },
+      },
+      {
+        new: true,
+      }
+    );
+
+    if (!existedUser) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid OTP",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "OTP has been successfully reseted",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+//Get user details
+const GetUser = async (req, res) => {
+  try {
+    const { id } = req.id;
+
+    // Find the existed user
+    const existingUser = await findById(id);
+
+    if (!existingUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // If user is found, return success response with user data
+    res.status(200).json({
+      success: true,
+      message: "User found successfully",
+      data: existingUser,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+
+
+module.exports = {
+  userRegistration,
+  UserLogin,
+  UserLogOut,
+  ResetPassword,
+  VerifyOtp,
+  GetUser,
+};

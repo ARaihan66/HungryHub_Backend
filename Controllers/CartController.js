@@ -1,8 +1,11 @@
 const foodModel = require("../Models/FoodModel");
 const userModel = require("../Models/UserModel");
+const stripe = require("stripe")(
+  "sk_test_51MCL2QLd3ml1apOvUCtMBCGHUdDi4CT3TaS9HKcEgIIy5dkwkU3g0St5gUheTFJwdH2WAr5KIYpFekaBIG4b8G6H00AnmTzu96"
+);
 
 // Add to cart
-const addToCart = async (req, res) => {
+const AddToCart = async (req, res) => {
   try {
     const userId = req.params.id; // Assuming userId is passed as a route parameter
     const { id, name, price, rating, image, quantity } = req.body;
@@ -162,7 +165,7 @@ const IncrementQuantity = async (req, res) => {
 };
 
 //Decrement quantity
-const decrementQuantity = async (req, res) => {
+const DecrementQuantity = async (req, res) => {
   try {
     const id = req.params.id;
 
@@ -198,4 +201,50 @@ const decrementQuantity = async (req, res) => {
   }
 };
 
+// Check out
+const CheckOut = async (req, res) => {
+  try {
+    const userId = req.id;
 
+    const cartItems = await foodModel.findOne({ _id: userId });
+
+    const session = await Stripe.chechout.sessions.create({
+      payment_method_types: ["card"],
+      mode: "payment",
+      line_items: cartItems.map((item) => {
+        return {
+          price_date: {
+            currency: "inr",
+            product_data: {
+              name: item.name,
+              image: [item.image],
+            },
+            unit_amount: item.price * 100,
+          },
+          quantity: item.quantity,
+        };
+      }),
+      success_url: "http://localhost:5173/success",
+      cancel_url: "http://localhost:5173",
+    });
+
+    res.status(200).json({
+      success: true,
+      url: session.url,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+module.exports = {
+  AddToCart,
+  GetCartItem,
+  RemoveFromCart,
+  IncrementQuantity,
+  DecrementQuantity,
+  CheckOut,
+};
