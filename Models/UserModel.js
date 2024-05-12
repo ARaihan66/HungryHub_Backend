@@ -14,7 +14,7 @@ const userSchema = Schema({
     type: String,
     required: [true, "Please provide your password"],
   },
-  cartItem: {
+  cartItems: {
     type: Array,
     default: {
       type: mongoose.Schema.Types.ObjectId,

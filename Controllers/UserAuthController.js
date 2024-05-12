@@ -42,7 +42,7 @@ const userRegistration = async (req, res) => {
     });
   } catch (error) {
     // Handle errors
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
@@ -96,7 +96,7 @@ const UserLogin = async (req, res) => {
     });
   } catch (error) {
     // Handle server errors
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
@@ -116,14 +116,14 @@ const UserLogOut = async (req, res) => {
     });
   } catch (error) {
     // Handle server errors
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
   }
 };
 
-//Get user
+//Get user details
 const GetUser = async (req, res) => {
   try {
     const { id } = req.id;
@@ -145,7 +145,7 @@ const GetUser = async (req, res) => {
       data: existingUser,
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
