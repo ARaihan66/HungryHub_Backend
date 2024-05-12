@@ -1,6 +1,7 @@
 const userModel = require("../Models/UserModel");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const otpGenerator = require("otp-generator");
 
 //User registration
 const userRegistration = async (req, res) => {
@@ -146,6 +147,75 @@ const GetUser = async (req, res) => {
     });
   } catch (error) {
     return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+//Reset password
+const ResetPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    const existedUser = userModel.findOne({ email });
+
+    if (!existedUser) {
+      return res.status(400).json({
+        success: false,
+        message: "Please sign up first",
+      });
+    }
+
+    const otp = otpGenerator.generate(4, {
+      upperCaseAlphabets: false,
+      lowerCaseAlphabets: false,
+      specialChars: false,
+      digits: true,
+    });
+
+    var transport = nodemailer.createTransport({
+      host: "sandbox.smtp.mailtrap.io",
+      port: 2525,
+      auth: {
+        user: process.env.SENDER,
+        pass: process.env.PASSWORD,
+      },
+    });
+
+    const info = await transporter.sendMail({
+      from: process.env.SENDER, // sender address
+      to: email, // list of receivers
+      subject: "Reset password", // Subject line
+      //text: "Hello world?", // plain text body
+      html: `<h3>Your Generated OTP : ${otp}</h3>`, // html body
+    });
+
+    if (info.messageId) {
+      await userModel.findOneAndUpdate(
+        { email },
+        {
+          $set: {
+            otp: otp,
+          },
+        },
+        {
+          new: true,
+        }
+      );
+
+      return res.status(200).json({
+        success: true,
+        message: "OTP has been sent to your mail",
+      });
+    }
+
+    res.status(400).json({
+      success: false,
+      message: "Failed to send OTP",
+    });
+  } catch (error) {
+    return res.status(200).json({
       success: false,
       message: error.message,
     });
