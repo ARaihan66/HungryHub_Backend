@@ -240,6 +240,33 @@ const CheckOut = async (req, res) => {
   }
 };
 
+//Clear cart
+const ClearCart = async (req, res) => {
+  try {
+    const userId = req.id;
+
+    const deletedItem = await foodModel.deleteMany({ userId });
+    const deletedList = await userModel.findOneAndUpdate(
+      { _id: userId },
+      {
+        cartItems: [],
+      }
+    );
+
+    if (!deletedItem || !deletedList) {
+      return res.status(400).json({
+        success: false,
+        message: "Failed to clear to cart",
+      });
+    }
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 module.exports = {
   AddToCart,
   GetCartItem,
@@ -247,4 +274,5 @@ module.exports = {
   IncrementQuantity,
   DecrementQuantity,
   CheckOut,
+  ClearCart,
 };

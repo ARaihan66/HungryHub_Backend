@@ -1,5 +1,4 @@
 const router = require("express").Router();
-const authorization = require("../Authorization/Authorization");
 const {
   AddToCart,
   RemoveFromCart,
@@ -8,7 +7,7 @@ const {
   CheckOut,
   GetCartItem,
 } = require("../Controllers/CartController");
-
+const {authorization} = require("../Authorization/Authorization");
 
 //Public route
 router.route("/add-to-cart/:id").post(AddToCart);
