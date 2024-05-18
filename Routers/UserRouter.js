@@ -1,6 +1,6 @@
 const router = require("express").Router();
 const {
-  userRegistration,
+  UserRegistration,
   UserLogin,
   UserLogOut,
   GetUser,
@@ -8,7 +8,7 @@ const {
 const { authorization } = require("../Authorization/Authorization");
 
 //Public router
-router.route("/sign-up").post(userRegistration);
+router.route("/sign-up").post(UserRegistration);
 router.route("/sign-in").post(UserLogin);
 
 //Protected router

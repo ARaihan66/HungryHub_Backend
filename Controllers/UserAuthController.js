@@ -3,10 +3,10 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const otpGenerator = require("otp-generator");
 const nodemailer = require("nodemailer");
-
+//require('dotenv').config();
 
 //User registration
-const userRegistration = async (req, res) => {
+const UserRegistration = async (req, res) => {
   try {
     const { userName, email, password } = req.body;
 
@@ -68,15 +68,27 @@ const UserLogin = async (req, res) => {
     // Find user by email
     const existingUser = await userModel.findOne({ email });
 
+    if (!existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: "Please sign up",
+      });
+    }
+
     // Check if user exists and password is correct
-    if (
-      existingUser &&
-      (await bcrypt.compare(password, existingUser.password))
-    ) {
+   const isMatch =  await bcrypt.compare(password, existingUser.password);
+
+   if(!isMatch){
+    return res.status(400).json({
+      success:false,
+      message:"Password doesn't match"
+    })
+   }
+   
       // Generate JWT token
       const token = jwt.sign(
         { id: existingUser._id },
-        process.env.JWT_SECRET_KEY,
+        process.env.JWT_SECTER_KEY,
         {
           expiresIn: "30d",
         }
@@ -90,13 +102,6 @@ const UserLogin = async (req, res) => {
         success: true,
         message: "User login successful",
       });
-    }
-
-    // Invalid credentials
-    return res.status(401).json({
-      success: false,
-      message: "Invalid email or password",
-    });
   } catch (error) {
     // Handle server errors
     return res.status(500).json({
@@ -262,10 +267,8 @@ const GetUser = async (req, res) => {
   }
 };
 
-
-
 module.exports = {
-  userRegistration,
+  UserRegistration,
   UserLogin,
   UserLogOut,
   ResetPassword,
